@@ -1,5 +1,7 @@
 package eci.arsw.covidanalyzer;
 
+import jdk.nashorn.api.scripting.ScriptObjectMirror;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -16,8 +18,8 @@ import java.util.stream.Stream;
 /**
  * A Camel Application
  */
-public class CovidAnalyzerTool {
-
+public class CovidAnalyzerTool implements Runnable {
+    //Variable para cambiar el numero de hilos
     private ResultAnalyzer resultAnalyzer;
     private TestReader testReader;
     private int amountOfFilesTotal;
@@ -61,21 +63,60 @@ public class CovidAnalyzerTool {
      * A main() so we can easily run these routing rules in our IDE
      */
     public static void main(String... args) throws Exception {
-        CovidAnalyzerTool covidAnalyzerTool = new CovidAnalyzerTool();
+        /**
+         while (true) {
+         Scanner scanner = new Scanner(System.in);
+         String line = scanner.nextLine();
+         if (line.contains("exit"))
+         break;
+         String message = "Processed %d out of %d files.\nFound %d positive people:\n%s";
+         Set<Result> positivePeople = covidAnalyzerTool.getPositivePeople();
+         String affectedPeople = positivePeople.stream().map(Result::toString).reduce("", (s1, s2) -> s1 + "\n" + s2);
+         message = String.format(message, covidAnalyzerTool.amountOfFilesProcessed.get(), covidAnalyzerTool.amountOfFilesTotal, positivePeople.size(), affectedPeople);
+         System.out.println(message);
+         }
+         }
+         */
+        Integer NTHERADS = 5;// variable para poder dividir la funcion en numero de hilos
+        CovidAnalyzerTool covidAnalyzerTool = new CovidAnalyzerTool() {
+            @Override
+            public void run() {
+
+            }
+        };
         Thread processingThread = new Thread(() -> covidAnalyzerTool.processResultData());
+        List<File> resultFileList = covidAnalyzerTool.getResultFileList();
         processingThread.start();
-        while (true) {
-            Scanner scanner = new Scanner(System.in);
-            String line = scanner.nextLine();
-            if (line.contains("exit"))
-                break;
-            String message = "Processed %d out of %d files.\nFound %d positive people:\n%s";
-            Set<Result> positivePeople = covidAnalyzerTool.getPositivePeople();
-            String affectedPeople = positivePeople.stream().map(Result::toString).reduce("", (s1, s2) -> s1 + "\n" + s2);
-            message = String.format(message, covidAnalyzerTool.amountOfFilesProcessed.get(), covidAnalyzerTool.amountOfFilesTotal, positivePeople.size(), affectedPeople);
-            System.out.println(message);
+        Integer indiceInferior = 0;
+        List<Thread> threadsSolucion = new ArrayList<>();
+
+
+
+        if (resultFileList.size() % NTHERADS !=0) {
+            for (int i = 0; i < NTHERADS -1 ;i++){
+                List<File> files = covidAnalyzerTool.divideFiles(resultFileList,indiceInferior,NTHERADS);
+                threadsSolucion.add(new CovidThread(files));
+                inicioHilos(threadsSolucion);
+                System.out.println("estuve aqui");
+            }
+        }
+        }
+
+    private List<File> divideFiles(List<File> resultFileList,Integer indiceInferior, Integer ntherads) {
+        return resultFileList.subList(indiceInferior, ntherads-1);
+    }
+
+    public static void inicioHilos(List<Thread> threadsSolucion){
+        for (Thread pf: threadsSolucion){
+            pf.start();
+
         }
     }
 
+
+    @Override
+    public void run() {
+
+    }
 }
 
