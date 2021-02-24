@@ -1,5 +1,6 @@
 package eci.arsw.covidanalyzer;
 
+import com.sun.deploy.security.SelectableSecurityManager;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
 
 import java.io.File;
@@ -18,7 +19,7 @@ import java.util.stream.Stream;
 /**
  * A Camel Application
  */
-public class CovidAnalyzerTool implements Runnable {
+public abstract class CovidAnalyzerTool implements Runnable {
     //Variable para cambiar el numero de hilos
     private ResultAnalyzer resultAnalyzer;
     private TestReader testReader;
@@ -92,31 +93,31 @@ public class CovidAnalyzerTool implements Runnable {
 
 
 
-        if (resultFileList.size() % NTHERADS !=0) {
-            for (int i = 0; i < NTHERADS -1 ;i++){
-                List<File> files = covidAnalyzerTool.divideFiles(resultFileList,indiceInferior,NTHERADS);
-                threadsSolucion.add(new CovidThread(files));
-                inicioHilos(threadsSolucion);
-                System.out.println("estuve aqui");
+        if (resultFileList.size() % NTHERADS != 0) {
+            for (int i = 0; i < NTHERADS - 1; i++) {
+                List<File> filesDivision = covidAnalyzerTool.divideFiles(resultFileList, indiceInferior, indiceInferior + NTHERADS);
+                System.out.println(indiceInferior + "---" + (indiceInferior + NTHERADS - 1));
+                threadsSolucion.add(new CovidThread(filesDivision));
+                indiceInferior = indiceInferior + NTHERADS;
+            }
+            System.out.println(indiceInferior + "---" + (resultFileList.size() - 1));
+            List<File> filesDivision = covidAnalyzerTool.divideFiles(resultFileList, indiceInferior, resultFileList.size());
+            threadsSolucion.add(new CovidThread(filesDivision));
+        } else {
+            for (int i = 0; i < NTHERADS; i++) {
+                List<File> filesDivision = covidAnalyzerTool.divideFiles(resultFileList, indiceInferior, indiceInferior + NTHERADS);
+                threadsSolucion.add(new CovidThread(filesDivision));
+                indiceInferior = indiceInferior + NTHERADS;
             }
         }
-        }
 
-    private List<File> divideFiles(List<File> resultFileList,Integer indiceInferior, Integer ntherads) {
-        return resultFileList.subList(indiceInferior, ntherads-1);
-    }
 
-    public static void inicioHilos(List<Thread> threadsSolucion){
-        for (Thread pf: threadsSolucion){
-            pf.start();
+}
 
-        }
+    private List<File> divideFiles(List<File> resultFileList, Integer indiceInferior, int size) {
+        return resultFileList.subList(indiceInferior, size-1);
     }
 
 
-    @Override
-    public void run() {
-
-    }
 }
 

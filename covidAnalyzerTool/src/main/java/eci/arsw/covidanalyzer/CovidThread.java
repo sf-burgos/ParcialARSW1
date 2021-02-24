@@ -27,6 +27,7 @@ public class CovidThread extends Thread  {
     @Override
     public void run(){
             for (File resultFile : this.files){
+                System.out.println("here");
                 List<Result> results = testReader.readResultsFromFile(resultFile);
                 for (Result result: results){
                     resultAnalyzer.addResult(result);
